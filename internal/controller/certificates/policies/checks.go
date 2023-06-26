@@ -166,6 +166,35 @@ func SecretIssuerAnnotationsNotUpToDate(input Input) (string, string, bool) {
 	return "", "", false
 }
 
+// SecretPublicKeyDiffersFromCurrentCertificateRequest checks that the current CertificateRequest
+// contains a CSR that is signed by the key stored in the Secret. A failure is often caused by the
+// Secret being changed outside of the control of cert-manager, causing the current CertificateRequest
+// to no longer match what is stored in the Secret.
+func SecretPublicKeyDiffersFromCurrentCertificateRequest(input Input) (string, string, bool) {
+	if input.CurrentRevisionRequest == nil {
+		return "", "", false
+	}
+	pk, err := pki.DecodePrivateKeyBytes(input.Secret.Data[corev1.TLSPrivateKeyKey])
+	if err != nil {
+		return InvalidKeyPair, fmt.Sprintf("Issuing certificate as Secret contains invalid private key data: %v", err), true
+	}
+
+	csr, err := pki.DecodeX509CertificateRequestBytes(input.CurrentRevisionRequest.Spec.Request)
+	if err != nil {
+		return InvalidCertificateRequest, fmt.Sprintf("Failed to decode current CertificateRequest: %v", err), true
+	}
+
+	equal, err := pki.PublicKeysEqual(csr.PublicKey, pk.Public())
+	if err != nil {
+		return InvalidCertificateRequest, fmt.Sprintf("CertificateRequest's public key is invalid: %v", err), true
+	}
+	if !equal {
+		return SecretMismatch, "Secret contains a private key that does not match the current CertificateRequest", true
+	}
+
+	return "", "", false
+}
+
 func CurrentCertificateRequestNotValidForSpec(input Input) (string, string, bool) {
 	if input.CurrentRevisionRequest == nil {
 		// Fallback to comparing the Certificate spec with the issued certificate.
@@ -347,10 +376,17 @@ func SecretTemplateMismatchesSecretManagedFields(fieldManager string) Func {
 			}
 		}
 
-		baseAnnotations, err := internalcertificates.AnnotationsForCertificateSecret(input.Certificate, x509cert)
+		baseAnnotations, err := internalcertificates.AnnotationsForCertificate(x509cert)
 		if err != nil {
 			return InvalidCertificate, fmt.Sprintf("Failed getting secret annotations: %v", err), true
 		}
+
+		// We don't use the values of these annotations, but we need to make sure
+		// that the keys are present in the map so that we can compare the sets.
+		baseAnnotations[cmapi.CertificateNameKey] = "<certificate-value>"
+		baseAnnotations[cmapi.IssuerNameAnnotationKey] = "<issuer-name>"
+		baseAnnotations[cmapi.IssuerKindAnnotationKey] = "<issuer-kind>"
+		baseAnnotations[cmapi.IssuerGroupAnnotationKey] = "<issuer-group>"
 
 		managedLabels, managedAnnotations := sets.NewString(), sets.NewString()
 
