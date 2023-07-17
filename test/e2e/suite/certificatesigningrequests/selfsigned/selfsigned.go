@@ -28,10 +28,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/clock"
 
+	"github.com/cert-manager/cert-manager/e2e-tests/framework"
 	"github.com/cert-manager/cert-manager/internal/controller/feature"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	utilfeature "github.com/cert-manager/cert-manager/pkg/util/feature"
-	"github.com/cert-manager/cert-manager/test/framework"
 	testcrypto "github.com/cert-manager/cert-manager/test/unit/crypto"
 )
 
@@ -80,7 +80,7 @@ var _ = framework.CertManagerDescribe("CertificateSigningRequests SelfSigned Sec
 			Spec: certificatesv1.CertificateSigningRequestSpec{
 				Request:    bundle.CSRBytes,
 				SignerName: fmt.Sprintf("issuers.cert-manager.io/%s.%s", f.Namespace.Name, issuer.GetName()),
-				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageClientAuth, certificatesv1.UsageServerAuth},
+				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageKeyEncipherment, certificatesv1.UsageDigitalSignature},
 			},
 		}, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
@@ -148,7 +148,7 @@ var _ = framework.CertManagerDescribe("CertificateSigningRequests SelfSigned Sec
 			Spec: certificatesv1.CertificateSigningRequestSpec{
 				Request:    bundle.CSRBytes,
 				SignerName: fmt.Sprintf("issuers.cert-manager.io/%s.%s", f.Namespace.Name, issuer.GetName()),
-				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageClientAuth, certificatesv1.UsageServerAuth},
+				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageKeyEncipherment, certificatesv1.UsageDigitalSignature},
 			},
 		}, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
@@ -206,7 +206,7 @@ var _ = framework.CertManagerDescribe("CertificateSigningRequests SelfSigned Sec
 			Spec: certificatesv1.CertificateSigningRequestSpec{
 				Request:    bundle.CSRBytes,
 				SignerName: fmt.Sprintf("clusterissuers.cert-manager.io/" + issuer.GetName()),
-				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageClientAuth, certificatesv1.UsageServerAuth},
+				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageKeyEncipherment, certificatesv1.UsageDigitalSignature},
 			},
 		}, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
@@ -274,7 +274,7 @@ var _ = framework.CertManagerDescribe("CertificateSigningRequests SelfSigned Sec
 			Spec: certificatesv1.CertificateSigningRequestSpec{
 				Request:    bundle.CSRBytes,
 				SignerName: fmt.Sprintf("clusterissuers.cert-manager.io/" + issuer.GetName()),
-				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageClientAuth, certificatesv1.UsageServerAuth},
+				Usages:     []certificatesv1.KeyUsage{certificatesv1.UsageKeyEncipherment, certificatesv1.UsageDigitalSignature},
 			},
 		}, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
