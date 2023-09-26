@@ -31,7 +31,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/cert-manager/cert-manager/cmd/ctl/pkg/build"
-	logf "github.com/cert-manager/cert-manager/pkg/logs"
 )
 
 type options struct {

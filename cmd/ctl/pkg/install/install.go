@@ -37,7 +37,6 @@ import (
 
 	"github.com/cert-manager/cert-manager/cmd/ctl/pkg/build"
 	"github.com/cert-manager/cert-manager/cmd/ctl/pkg/install/helm"
-	logf "github.com/cert-manager/cert-manager/pkg/logs"
 )
 
 type InstallOptions struct {

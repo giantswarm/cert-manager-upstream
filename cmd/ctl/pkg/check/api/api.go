@@ -107,8 +107,7 @@ func (o *Options) Run(ctx context.Context) error {
 	log := logf.FromContext(ctx, "checkAPI")
 
 	start := time.Now()
-	var lastError error
-	pollErr := wait.PollUntilContextCancel(ctx, o.Interval, true, func(ctx context.Context) (bool, error) {
+	pollErr := wait.PollUntilContextCancel(ctx, o.Interval, false, func(ctx context.Context) (bool, error) {
 		if err := o.APIChecker.Check(ctx); err != nil {
 			simpleError := cmapichecker.TranslateToSimpleError(err)
 			if simpleError != nil {
@@ -118,6 +117,8 @@ func (o *Options) Run(ctx context.Context) error {
 				log.V(2).Info("Not ready", "err", err)
 				lastError = err
 			}
+
+			log.Printf("Not ready: %v", err)
 
 			if time.Since(start) > o.Wait {
 				return false, context.DeadlineExceeded

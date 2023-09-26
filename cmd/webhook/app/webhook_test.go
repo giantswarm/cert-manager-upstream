@@ -25,8 +25,6 @@ import (
 	"reflect"
 	"testing"
 
-	config "github.com/cert-manager/cert-manager/internal/apis/config/webhook"
-	logf "github.com/cert-manager/cert-manager/pkg/logs"
 	"github.com/cert-manager/cert-manager/pkg/webhook/options"
 )
 

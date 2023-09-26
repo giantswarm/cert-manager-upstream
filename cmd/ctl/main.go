@@ -23,8 +23,6 @@ import (
 	"runtime"
 	"strings"
 
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-
 	ctlcmd "github.com/cert-manager/cert-manager/cmd/ctl/cmd"
 	"github.com/cert-manager/cert-manager/internal/cmd/util"
 	logf "github.com/cert-manager/cert-manager/pkg/logs"

@@ -28,7 +28,6 @@ import (
 
 	"github.com/cert-manager/cert-manager/cmd/ctl/pkg/build"
 	"github.com/cert-manager/cert-manager/cmd/ctl/pkg/build/commands"
-	logf "github.com/cert-manager/cert-manager/pkg/logs"
 )
 
 func NewCertManagerCtlCommand(ctx context.Context, in io.Reader, out, err io.Writer) *cobra.Command {

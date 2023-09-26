@@ -31,7 +31,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/util"
 	"github.com/cert-manager/cert-manager/pkg/util/configfile"
 	utilfeature "github.com/cert-manager/cert-manager/pkg/util/feature"
-	webhookconfigfile "github.com/cert-manager/cert-manager/pkg/webhook/configfile"
+	"github.com/cert-manager/cert-manager/pkg/webhook/configfile"
 	"github.com/cert-manager/cert-manager/pkg/webhook/options"
 )
 
