@@ -45,9 +45,9 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	dbg := log.V(logf.DebugLevel)
 	name := cr.Name
 	namespace := cr.Namespace
-	issuer_name := cr.Spec.IssuerRef.Name
-	issuer_kind := cr.Spec.IssuerRef.Kind
-	issuer_group := cr.Spec.IssuerRef.Group
+	issuerName := cr.Spec.IssuerRef.Name
+	issuerKind := cr.Spec.IssuerRef.Kind
+	issuerGroup := cr.Spec.IssuerRef.Group
 
 	if !(cr.Spec.IssuerRef.Group == "" || cr.Spec.IssuerRef.Group == certmanager.GroupName) {
 		dbg.Info("certificate request issuerRef group does not match certmanager group so skipping processing")
@@ -66,7 +66,7 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	// Ready=RequestDenied if not already.
 	if apiutil.CertificateRequestIsDenied(cr) {
 		c.reporter.Denied(crCopy)
-		metrics.IncrementCertificateRequestCount(name, namespace, issuer_name, issuer_kind, issuer_group)
+		metrics.IncrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return nil
 	}
 
@@ -80,19 +80,19 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	if !apiutil.CertificateRequestIsApproved(cr) {
 		dbg.Info("certificate request has not been approved")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "WaitingForApproval", "Not signing CertificateRequest until it is Approved")
-		metrics.IncrementCertificateRequestCount(name, namespace, issuer_name, issuer_kind, issuer_group)
+		metrics.IncrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return nil
 	}
 
 	switch apiutil.CertificateRequestReadyReason(cr) {
 	case cmapi.CertificateRequestReasonFailed:
 		dbg.Info("certificate request Ready condition failed so skipping processing")
-		metrics.DecrementCertificateRequestCount(name, namespace, issuer_name, issuer_kind, issuer_group)
+		metrics.DecrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return
 
 	case cmapi.CertificateRequestReasonIssued:
 		dbg.Info("certificate request Ready condition true so skipping processing")
-		metrics.DecrementCertificateRequestCount(name, namespace, issuer_name, issuer_kind, issuer_group)
+		metrics.DecrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return
 	}
 
