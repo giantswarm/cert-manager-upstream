@@ -35,7 +35,6 @@ import (
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	logf "github.com/cert-manager/cert-manager/pkg/logs"
-	"github.com/cert-manager/cert-manager/pkg/metrics"
 	utilfeature "github.com/cert-manager/cert-manager/pkg/util/feature"
 	"github.com/cert-manager/cert-manager/pkg/util/pki"
 )
@@ -43,11 +42,6 @@ import (
 func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (err error) {
 	log := logf.FromContext(ctx)
 	dbg := log.V(logf.DebugLevel)
-	name := cr.Name
-	namespace := cr.Namespace
-	issuerName := cr.Spec.IssuerRef.Name
-	issuerKind := cr.Spec.IssuerRef.Kind
-	issuerGroup := cr.Spec.IssuerRef.Group
 
 	if !(cr.Spec.IssuerRef.Group == "" || cr.Spec.IssuerRef.Group == certmanager.GroupName) {
 		dbg.Info("certificate request issuerRef group does not match certmanager group so skipping processing")
@@ -66,7 +60,6 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	// Ready=RequestDenied if not already.
 	if apiutil.CertificateRequestIsDenied(cr) {
 		c.reporter.Denied(crCopy)
-		metrics.IncrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return nil
 	}
 
@@ -80,19 +73,16 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	if !apiutil.CertificateRequestIsApproved(cr) {
 		dbg.Info("certificate request has not been approved")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "WaitingForApproval", "Not signing CertificateRequest until it is Approved")
-		metrics.IncrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return nil
 	}
 
 	switch apiutil.CertificateRequestReadyReason(cr) {
 	case cmapi.CertificateRequestReasonFailed:
 		dbg.Info("certificate request Ready condition failed so skipping processing")
-		metrics.DecrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return
 
 	case cmapi.CertificateRequestReasonIssued:
 		dbg.Info("certificate request Ready condition true so skipping processing")
-		metrics.DecrementCertificateRequestCount(name, namespace, issuerName, issuerKind, issuerGroup)
 		return
 	}
 
