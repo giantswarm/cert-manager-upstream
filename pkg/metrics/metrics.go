@@ -32,7 +32,9 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/vuln/client"
 	"k8s.io/utils/clock"
 
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
@@ -51,6 +53,7 @@ const (
 type Metrics struct {
 	log      logr.Logger
 	registry *prometheus.Registry
+	client   client.Client
 
 	clockTimeSeconds                   prometheus.CounterFunc
 	clockTimeSecondsGauge              prometheus.GaugeFunc
@@ -62,7 +65,7 @@ type Metrics struct {
 	venafiClientRequestDurationSeconds *prometheus.SummaryVec
 	controllerSyncCallCount            *prometheus.CounterVec
 	controllerSyncErrorCount           *prometheus.CounterVec
-	currentCertificateRequestGauge     *prometheus.GaugeVec
+	currentCertificateRequestCount     *prometheus.CounterVec
 }
 
 var readyConditionStatuses = [...]cmmeta.ConditionStatus{cmmeta.ConditionTrue, cmmeta.ConditionFalse, cmmeta.ConditionUnknown}
@@ -185,11 +188,10 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 			},
 			[]string{"controller"},
 		)
-		currentCertificateRequestGauge = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Namespace: namespace,
-				Name:      "current_certificate_request_count",
-				Help:      "The current number of certificate requests.",
+		currentCertificateRequestCount = promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "current_certificate_request_count",
+				Help: "The current number of certificate requests.",
 			},
 			[]string{"name", "namespace", "issuer_name", "issuer_kind", "issuer_group"},
 		)
@@ -210,7 +212,7 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 		venafiClientRequestDurationSeconds: venafiClientRequestDurationSeconds,
 		controllerSyncCallCount:            controllerSyncCallCount,
 		controllerSyncErrorCount:           controllerSyncErrorCount,
-		currentCertificateRequestGauge:     currentCertificateRequestGauge,
+		currentCertificateRequestCount:     currentCertificateRequestCount,
 	}
 
 	return m
@@ -228,7 +230,7 @@ func (m *Metrics) NewServer(ln net.Listener) *http.Server {
 	m.registry.MustRegister(m.acmeClientRequestCount)
 	m.registry.MustRegister(m.controllerSyncCallCount)
 	m.registry.MustRegister(m.controllerSyncErrorCount)
-	m.registry.MustRegister(m.currentCertificateRequestGauge)
+	m.registry.MustRegister(m.currentCertificateRequestCount)
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}))
