@@ -277,14 +277,13 @@ topologySpreadConstraints: []
 
 # LivenessProbe settings for the controller container of the controller Pod.
 #
-# Disabled by default, because the controller has a leader election mechanism
-# which should cause it to exit if it is unable to renew its leader election
-# record.
+# Enabled by default, because we want to enable the clock-skew liveness probe that
+# restarts the controller in case of a skew between the system clock and the monotonic clock.
 # LivenessProbe durations and thresholds are based on those used for the Kubernetes
 # controller-manager. See:
 # https://github.com/kubernetes/kubernetes/blob/806b30170c61a38fedd54cc9ede4cd6275a1ad3b/cmd/kubeadm/app/util/staticpod/utils.go#L241-L245
 livenessProbe:
-  enabled: false
+  enabled: true
   initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 15
@@ -506,6 +505,19 @@ webhook:
 cainjector:
   enabled: true
   replicaCount: 1
+
+  # Used to configure options for the cainjector pod.
+  # This allows setting options that'd usually be provided via flags.
+  # An APIVersion and Kind must be specified in your values.yaml file.
+  # Flags will override options that are set here.
+  config:
+    # apiVersion: cainjector.config.cert-manager.io/v1alpha1
+    # kind: CAInjectorConfiguration
+    # logging:
+    #  verbosity: 2
+    #  format: text
+    # leaderElectionConfig:
+    #  namespace: kube-system
 
   strategy: {}
     # type: RollingUpdate
