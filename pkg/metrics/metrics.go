@@ -172,7 +172,7 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 		controllerSyncCallCount = prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Namespace: namespace,
-				Name:      "controller_sync_call_counter",
+				Name:      "controller_sync_call_count",
 				Help:      "The number of sync() calls made by a controller.",
 			},
 			[]string{"controller"},

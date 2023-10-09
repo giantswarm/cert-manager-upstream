@@ -21,21 +21,9 @@ import (
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"k8s.io/client-go/tools/cache"
 )
 
-var (
-	currentCertificateRequestCount = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "current_certificate_request_count",
-			Help: "The current number of certificate requests.",
-		},
-		[]string{"name", "namespace", "issuer_name", "issuer_kind", "issuer_group"},
-	)
-)
-
-// getCurrentCertificateRequests fetches the current list of CertificateRequests
 func (m *Metrics) getCurrentCertificateRequests(ctx context.Context) ([]cmapi.CertificateRequest, error) {
 	crsList := cmapi.CertificateRequestList{}
 	err := m.client.List(ctx, &crsList)
@@ -45,7 +33,6 @@ func (m *Metrics) getCurrentCertificateRequests(ctx context.Context) ([]cmapi.Ce
 	return crsList.Items, nil
 }
 
-// This function can be triggered whenever there's a change in the number of CertificateRequests
 func (m *Metrics) HandleCertificateRequestEvent(ctx context.Context, cr *cmapi.CertificateRequest, event cache.ResourceEventHandler) {
 	crs, err := m.getCurrentCertificateRequests(ctx)
 	if err != nil {
@@ -55,9 +42,7 @@ func (m *Metrics) HandleCertificateRequestEvent(ctx context.Context, cr *cmapi.C
 	m.UpdateCurrentCertificateRequestCount(ctx, crs)
 }
 
-// UpdateCurrentCertificateRequestCount updates the current number of CertificateRequests
 func (m *Metrics) UpdateCurrentCertificateRequestCount(ctx context.Context, crs []cmapi.CertificateRequest) {
-	// Reset the counter to ensure it reflects the current total
 	currentCertificateRequestCount.Reset()
 	for _, cr := range crs {
 		labels := prometheus.Labels{
