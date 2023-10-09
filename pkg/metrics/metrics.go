@@ -172,7 +172,7 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 		controllerSyncCallCount = prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Namespace: namespace,
-				Name:      "controller_sync_call_count",
+				Name:      "controller_sync_call_counter",
 				Help:      "The number of sync() calls made by a controller.",
 			},
 			[]string{"controller"},
@@ -228,6 +228,7 @@ func (m *Metrics) NewServer(ln net.Listener) *http.Server {
 	m.registry.MustRegister(m.acmeClientRequestCount)
 	m.registry.MustRegister(m.controllerSyncCallCount)
 	m.registry.MustRegister(m.controllerSyncErrorCount)
+	m.registry.MustRegister(m.currentCertificateRequestCount)
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}))
