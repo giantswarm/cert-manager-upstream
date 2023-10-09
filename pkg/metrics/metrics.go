@@ -30,12 +30,12 @@ import (
 	"net/http"
 	"time"
 
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/utils/clock"
-
-	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -51,6 +51,7 @@ const (
 type Metrics struct {
 	log      logr.Logger
 	registry *prometheus.Registry
+	client   client.Client
 
 	clockTimeSeconds                   prometheus.CounterFunc
 	clockTimeSecondsGauge              prometheus.GaugeFunc
@@ -62,6 +63,7 @@ type Metrics struct {
 	venafiClientRequestDurationSeconds *prometheus.SummaryVec
 	controllerSyncCallCount            *prometheus.CounterVec
 	controllerSyncErrorCount           *prometheus.CounterVec
+	currentCertificateRequestCount     *prometheus.CounterVec
 }
 
 var readyConditionStatuses = [...]cmmeta.ConditionStatus{cmmeta.ConditionTrue, cmmeta.ConditionFalse, cmmeta.ConditionUnknown}
@@ -184,6 +186,13 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 			},
 			[]string{"controller"},
 		)
+		currentCertificateRequestCount = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "current_certificate_request_count",
+				Help: "The current number of certificate requests.",
+			},
+			[]string{"name", "namespace", "issuer_name", "issuer_kind", "issuer_group"},
+		)
 	)
 
 	// Create server and register Prometheus metrics handler
@@ -201,6 +210,7 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 		venafiClientRequestDurationSeconds: venafiClientRequestDurationSeconds,
 		controllerSyncCallCount:            controllerSyncCallCount,
 		controllerSyncErrorCount:           controllerSyncErrorCount,
+		currentCertificateRequestCount:     currentCertificateRequestCount,
 	}
 
 	return m
