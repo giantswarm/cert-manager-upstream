@@ -34,8 +34,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/vuln/client"
 	"k8s.io/utils/clock"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 )

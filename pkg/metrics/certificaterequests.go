@@ -18,7 +18,6 @@ package metrics
 
 import (
 	"context"
-	"log"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/prometheus/client_golang/prometheus"
@@ -36,20 +35,6 @@ var (
 	)
 )
 
-// UpdateCurrentCertificateRequestCount updates the current number of CertificateRequests
-func (m *Metrics) UpdateCurrentCertificateRequestCount(ctx context.Context, crs []cmapi.CertificateRequest) {
-	for _, cr := range crs {
-		labels := prometheus.Labels{
-			"name":         cr.Name,
-			"namespace":    cr.Namespace,
-			"issuer_name":  cr.Spec.IssuerRef.Name,
-			"issuer_kind":  cr.Spec.IssuerRef.Kind,
-			"issuer_group": cr.Spec.IssuerRef.Group,
-		}
-		currentCertificateRequestCount.With(labels).Inc()
-	}
-}
-
 // getCurrentCertificateRequests fetches the current list of CertificateRequests
 func (m *Metrics) getCurrentCertificateRequests(ctx context.Context) ([]cmapi.CertificateRequest, error) {
 	crsList := cmapi.CertificateRequestList{}
@@ -64,8 +49,24 @@ func (m *Metrics) getCurrentCertificateRequests(ctx context.Context) ([]cmapi.Ce
 func (m *Metrics) HandleCertificateRequestEvent(ctx context.Context, cr *cmapi.CertificateRequest, event cache.ResourceEventHandler) {
 	crs, err := m.getCurrentCertificateRequests(ctx)
 	if err != nil {
-		log.Println("Error fetching CertificateRequests:", err)
+		m.log.Error(err, "Error fetching CertificateRequests")
 		return
 	}
 	m.UpdateCurrentCertificateRequestCount(ctx, crs)
+}
+
+// UpdateCurrentCertificateRequestCount updates the current number of CertificateRequests
+func (m *Metrics) UpdateCurrentCertificateRequestCount(ctx context.Context, crs []cmapi.CertificateRequest) {
+	// Reset the counter to ensure it reflects the current total
+	currentCertificateRequestCount.Reset()
+	for _, cr := range crs {
+		labels := prometheus.Labels{
+			"name":         cr.Name,
+			"namespace":    cr.Namespace,
+			"issuer_name":  cr.Spec.IssuerRef.Name,
+			"issuer_kind":  cr.Spec.IssuerRef.Kind,
+			"issuer_group": cr.Spec.IssuerRef.Group,
+		}
+		currentCertificateRequestCount.With(labels).Inc()
+	}
 }
