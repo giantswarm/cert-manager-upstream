@@ -35,7 +35,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/utils/clock"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -51,7 +50,6 @@ const (
 type Metrics struct {
 	log      logr.Logger
 	registry *prometheus.Registry
-	client   client.Client
 
 	clockTimeSeconds                   prometheus.CounterFunc
 	clockTimeSecondsGauge              prometheus.GaugeFunc
@@ -63,7 +61,7 @@ type Metrics struct {
 	venafiClientRequestDurationSeconds *prometheus.SummaryVec
 	controllerSyncCallCount            *prometheus.CounterVec
 	controllerSyncErrorCount           *prometheus.CounterVec
-	currentCertificateRequestCount     *prometheus.CounterVec
+	currentCertificateRequestCount     *prometheus.GaugeVec
 }
 
 var readyConditionStatuses = [...]cmmeta.ConditionStatus{cmmeta.ConditionTrue, cmmeta.ConditionFalse, cmmeta.ConditionUnknown}
@@ -186,8 +184,9 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 			},
 			[]string{"controller"},
 		)
-		currentCertificateRequestCount = prometheus.NewCounterVec(
-			prometheus.CounterOpts{
+
+		currentCertificateRequestCount = prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
 				Name: "current_certificate_request_count",
 				Help: "The current number of certificate requests.",
 			},
@@ -252,4 +251,11 @@ func (m *Metrics) IncrementSyncCallCount(controllerName string) {
 // IncrementSyncErrorCount will increase count of errors during sync of that controller.
 func (m *Metrics) IncrementSyncErrorCount(controllerName string) {
 	m.controllerSyncErrorCount.WithLabelValues(controllerName).Inc()
+}
+
+func (m *Metrics) IncrementCurrentCertificateRequest(name, namespace, issuerName, issuerKind, issuerGroup string) {
+	m.currentCertificateRequestCount.WithLabelValues(name, namespace, issuerName, issuerKind, issuerGroup).Inc()
+}
+func (m *Metrics) DecrementCurrentCertificateRequest(name, namespace, issuerName, issuerKind, issuerGroup string) {
+	m.currentCertificateRequestCount.WithLabelValues(name, namespace, issuerName, issuerKind, issuerGroup).Dec()
 }
