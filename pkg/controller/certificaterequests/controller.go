@@ -35,6 +35,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/controller/certificaterequests/util"
 	"github.com/cert-manager/cert-manager/pkg/issuer"
 	logf "github.com/cert-manager/cert-manager/pkg/logs"
+	"github.com/cert-manager/cert-manager/pkg/metrics"
 )
 
 var keyFunc = controllerpkg.KeyFunc
@@ -97,8 +98,8 @@ type Controller struct {
 	issuer            Issuer
 
 	// used for testing
-	clock clock.Clock
-
+	clock    clock.Clock
+	metrics  *metrics.Metrics
 	reporter *util.Reporter
 }
 
@@ -113,10 +114,13 @@ type Controller struct {
 // automatically when the informer factory's Start method is called, if the
 // given informer was obtained using a SharedInformerFactory.
 func New(issuerType string, issuerConstructor IssuerConstructor, registerExtraInformers ...RegisterExtraInformerFn) *Controller {
+	logger := logf.Log
+	clk := clock.RealClock{}
 	return &Controller{
 		issuerType:             issuerType,
 		issuerConstructor:      issuerConstructor,
 		registerExtraInformers: registerExtraInformers,
+		metrics:                metrics.New(logger, clk),
 	}
 }
 
@@ -215,7 +219,7 @@ func (c *Controller) ProcessItem(ctx context.Context, key string) error {
 
 		return err
 	}
-
+	c.metrics.IncrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
 	ctx = logf.NewContext(ctx, logf.WithResource(log, cr))
 	return c.Sync(ctx, cr)
 }

@@ -43,6 +43,8 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	log := logf.FromContext(ctx)
 	dbg := log.V(logf.DebugLevel)
 
+	c.metrics.IncrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
+
 	if !(cr.Spec.IssuerRef.Group == "" || cr.Spec.IssuerRef.Group == certmanager.GroupName) {
 		dbg.Info("certificate request issuerRef group does not match certmanager group so skipping processing")
 		return nil
@@ -59,12 +61,14 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 	// If CertificateRequest has been denied, mark the CertificateRequest as
 	// Ready=RequestDenied if not already.
 	if apiutil.CertificateRequestIsDenied(cr) {
+		c.metrics.DecrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
 		c.reporter.Denied(crCopy)
 		return nil
 	}
 
 	// If CertificateRequest is invalid, do not process it
 	if apiutil.CertificateRequestHasInvalidRequest(cr) {
+		c.metrics.DecrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
 		dbg.Info("certificate request is invalid and will not be further processed")
 		return nil
 	}
@@ -78,10 +82,12 @@ func (c *Controller) Sync(ctx context.Context, cr *cmapi.CertificateRequest) (er
 
 	switch apiutil.CertificateRequestReadyReason(cr) {
 	case cmapi.CertificateRequestReasonFailed:
+		c.metrics.DecrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
 		dbg.Info("certificate request Ready condition failed so skipping processing")
 		return
 
 	case cmapi.CertificateRequestReasonIssued:
+		c.metrics.DecrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
 		dbg.Info("certificate request Ready condition true so skipping processing")
 		return
 	}
