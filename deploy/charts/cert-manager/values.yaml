@@ -4,8 +4,8 @@
 global:
   # Reference to one or more secrets to be used when pulling images
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  imagePullSecrets: []
-  # - name: "image-pull-secret"
+  imagePullSecrets:
+  - name: "quay-credentials"
 
   # Labels to apply to all resources
   # Please note that this does not add labels to the resources created dynamically by the controllers.
@@ -50,7 +50,7 @@ global:
     # renewal of a leadership.
     # retryPeriod: 15s
 
-installCRDs: false
+installCRDs: true
 
 replicaCount: 1
 
@@ -77,14 +77,14 @@ featureGates: ""
 maxConcurrentChallenges: 60
 
 image:
-  repository: quay.io/jetstack/cert-manager-controller
+  repository: quay.io/giantswarm/cert-manager-upstream/cert-manager-controller
   # You can manage a registry with
   # registry: quay.io
   # repository: jetstack/cert-manager-controller
 
   # Override the image tag to deploy by setting this variable.
   # If no value is set, the chart's appVersion will be used.
-  # tag: canary
+  tag: v3.6.1
 
   # Setting a digest will override any tag
   # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
@@ -411,14 +411,14 @@ webhook:
   serviceLabels: {}
 
   image:
-    repository: quay.io/jetstack/cert-manager-webhook
+    repository: quay.io/giantswarm/cert-manager-upstream/cert-manager-webhook
     # You can manage a registry with
     # registry: quay.io
     # repository: jetstack/cert-manager-webhook
 
     # Override the image tag to deploy by setting this variable.
     # If no value is set, the chart's appVersion will be used.
-    # tag: canary
+    tag: v3.6.1
 
     # Setting a digest will override any tag
     # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
@@ -570,14 +570,14 @@ cainjector:
   podLabels: {}
 
   image:
-    repository: quay.io/jetstack/cert-manager-cainjector
+    repository: quay.io/giantswarm/cert-manager-upstream/cert-manager-cainjector
     # You can manage a registry with
     # registry: quay.io
     # repository: jetstack/cert-manager-cainjector
 
     # Override the image tag to deploy by setting this variable.
     # If no value is set, the chart's appVersion will be used.
-    # tag: canary
+    tag: v3.6.1
 
     # Setting a digest will override any tag
     # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
@@ -610,14 +610,14 @@ cainjector:
 
 acmesolver:
   image:
-    repository: quay.io/jetstack/cert-manager-acmesolver
+    repository: quay.io/giantswarm/cert-manager-upstream/cert-manager-acmesolver
     # You can manage a registry with
     # registry: quay.io
     # repository: jetstack/cert-manager-acmesolver
 
     # Override the image tag to deploy by setting this variable.
     # If no value is set, the chart's appVersion will be used.
-    # tag: canary
+    tag: v3.6.1
 
     # Setting a digest will override any tag
     # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
@@ -684,14 +684,14 @@ startupapicheck:
   podLabels: {}
 
   image:
-    repository: quay.io/jetstack/cert-manager-ctl
+    repository: quay.io/giantswarm/cert-manager-upstream/cert-manager-ctl
     # You can manage a registry with
     # registry: quay.io
     # repository: jetstack/cert-manager-ctl
 
     # Override the image tag to deploy by setting this variable.
     # If no value is set, the chart's appVersion will be used.
-    # tag: canary
+    tag: v3.6.1
 
     # Setting a digest will override any tag
     # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20

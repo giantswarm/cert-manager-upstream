@@ -219,7 +219,7 @@ func (c *Controller) ProcessItem(ctx context.Context, key string) error {
 
 		return err
 	}
-	c.metrics.IncrementCurrentCertificateRequest(cr.Name, cr.Namespace, cr.Spec.IssuerRef.Name, cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Group)
+
 	ctx = logf.NewContext(ctx, logf.WithResource(log, cr))
 	return c.Sync(ctx, cr)
 }
