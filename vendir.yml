@@ -9,7 +9,8 @@ directories:
       repository:
         url: "https://charts.jetstack.io"
     includePaths:
-    - templates/**/crds.yaml
+    # Vendiring CRD templates from upstream disabled until addtional labels get fixed.
+    # - templates/**/crds.yaml
     ignorePaths:
     - "**/*.yaml"
     - "**/*.tpl"
