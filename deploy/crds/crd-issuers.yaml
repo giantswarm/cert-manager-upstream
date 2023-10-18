@@ -6,7 +6,8 @@ metadata:
     app: '{{ template "cert-manager.name" . }}'
     app.kubernetes.io/name: '{{ template "cert-manager.name" . }}'
     app.kubernetes.io/instance: "{{ .Release.Name }}"
-    # Generated labels {{- include "labels" . | nindent 4 }}
+    # Generated labels 
+    {{- include "labels" . | nindent 4 }}
 spec:
   group: cert-manager.io
   names:
