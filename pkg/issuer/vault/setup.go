@@ -18,6 +18,7 @@ package vault
 
 import (
 	"context"
+	"fmt"
 
 	vaultinternal "github.com/cert-manager/cert-manager/internal/vault"
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
@@ -32,11 +33,12 @@ const (
 
 	errorVault = "VaultError"
 
-	messageVaultClientInitFailed = "Failed to initialize Vault client: "
-	messageVaultConfigRequired   = "Vault config cannot be empty"
-	messageServerAndPathRequired = "Vault server and path are required fields"
-	messageAuthFieldsRequired    = "Vault tokenSecretRef, appRole, or kubernetes is required"
-	messageMultipleAuthFieldsSet = "Multiple auth methods cannot be set on the same Vault issuer"
+	messageVaultClientInitFailed         = "Failed to initialize Vault client: "
+	messageVaultStatusVerificationFailed = "Vault is not initialized or is sealed"
+	messageVaultConfigRequired           = "Vault config cannot be empty"
+	messageServerAndPathRequired         = "Vault server and path are required fields"
+	messageAuthFieldsRequired            = "Vault tokenSecretRef, appRole, or kubernetes is required"
+	messageMultipleAuthFieldsSet         = "Multiple auth methods cannot be set on the same Vault issuer"
 
 	messageKubeAuthRoleRequired      = "Vault Kubernetes auth requires a role to be set"
 	messageKubeAuthEitherRequired    = "Vault Kubernetes auth requires either secretRef.name or serviceAccountRef.name to be set"
@@ -133,9 +135,9 @@ func (v *Vault) Setup(ctx context.Context) error {
 	}
 
 	if err := client.IsVaultInitializedAndUnsealed(); err != nil {
-		logf.V(logf.WarnLevel).Infof("%s: %s", v.issuer.GetObjectMeta().Name, err.Error())
-		apiutil.SetIssuerCondition(v.issuer, v.issuer.GetGeneration(), v1.IssuerConditionReady, cmmeta.ConditionFalse, errorVault, err.Error())
-		return err
+		logf.V(logf.WarnLevel).Infof("%s: %s: error: %s", v.issuer.GetObjectMeta().Name, messageVaultStatusVerificationFailed, err.Error())
+		apiutil.SetIssuerCondition(v.issuer, v.issuer.GetGeneration(), v1.IssuerConditionReady, cmmeta.ConditionFalse, errorVault, messageVaultStatusVerificationFailed)
+		return fmt.Errorf(messageVaultStatusVerificationFailed)
 	}
 
 	logf.Log.V(logf.DebugLevel).Info(messageVaultVerified)

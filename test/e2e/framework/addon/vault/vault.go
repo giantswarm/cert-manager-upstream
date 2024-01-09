@@ -29,8 +29,6 @@ import (
 	"fmt"
 	"math/big"
 	"net"
-	"os"
-	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -47,7 +45,9 @@ import (
 
 const (
 	vaultHelmChartRepo    = "https://helm.releases.hashicorp.com"
-	vaultHelmChartVersion = "0.25.0"
+	vaultHelmChartVersion = "0.24.1"
+	vaultImageRepository  = "local/vault"
+	vaultImageTag         = "local"
 )
 
 // Vault describes the configuration details for an instance of Vault
@@ -182,6 +182,19 @@ func (v *Vault) Setup(cfg *config.Config, leaderData ...internal.AddonTransferab
 				Key:   "server.volumeMounts[0].mountPath",
 				Value: "/vault/tls",
 			},
+			// configure image and repo
+			{
+				Key:   "server.image.repository",
+				Value: vaultImageRepository,
+			},
+			{
+				Key:   "server.image.tag",
+				Value: vaultImageTag,
+			},
+			{
+				Key:   "server.image.pullPolicy",
+				Value: "Never",
+			},
 			// configure resource requests
 			{
 				Key:   "server.resources.requests.cpu",
@@ -193,54 +206,6 @@ func (v *Vault) Setup(cfg *config.Config, leaderData ...internal.AddonTransferab
 			},
 		},
 	}
-
-	// When the tests have been launched by make, the cluster will be a kind
-	// cluster into which we will have loaded some locally cached Vault images.
-	// But we also want people to be able to compile the E2E test binary and run
-	// the tests on their chosen cluster, in which case we do not override the
-	// Vault image and the default chart image will be downloaded and run
-	// instead.
-	// E2E_VAULT_IMAGE is exported by `make/e2e-setup.mk`.
-	if vaultImage := os.Getenv("E2E_VAULT_IMAGE"); vaultImage != "" {
-		parts := strings.Split(vaultImage, ":")
-		vaultImageRepository := parts[0]
-		vaultImageTag := parts[1]
-		v.chart.Vars = append(
-			v.chart.Vars,
-			[]chart.StringTuple{
-				// configure image and repo
-				{
-					Key:   "server.image.repository",
-					Value: vaultImageRepository,
-				},
-				{
-					Key:   "server.image.tag",
-					Value: vaultImageTag,
-				},
-				{
-					Key:   "server.image.pullPolicy",
-					Value: "Never",
-				},
-			}...,
-		)
-	}
-
-	// Set E2E_OPENSHIFT=true if you're running the E2E tests against an OpenShift
-	// cluster.
-	// OpenShift requires some different settings. See
-	// https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-openshift
-	if os.Getenv("E2E_OPENSHIFT") == "true" {
-		v.chart.Vars = append(
-			v.chart.Vars,
-			[]chart.StringTuple{
-				{
-					Key:   "global.openshift",
-					Value: "true",
-				},
-			}...,
-		)
-	}
-
 	_, err := v.chart.Setup(cfg)
 	if err != nil {
 		return nil, err

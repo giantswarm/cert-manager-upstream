@@ -1,6 +1,6 @@
 {{- if .Values.config -}}
-{{- $_ := .Values.config.apiVersion | required ".Values.config.apiVersion must be set !" -}}
-{{- $_ := .Values.config.kind | required ".Values.config.kind must be set !" -}}
+{{- required ".Values.config.apiVersion must be set !" .Values.config.apiVersion -}}
+{{- required ".Values.config.kind must be set !" .Values.config.kind -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

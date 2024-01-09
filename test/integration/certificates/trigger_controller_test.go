@@ -58,7 +58,7 @@ func TestTriggerController(t *testing.T) {
 
 	fakeClock := &fakeclock.FakeClock{}
 	// Build, instantiate and run the trigger controller.
-	kubeClient, factory, cmCl, cmFactory, scheme := framework.NewClients(t, config)
+	kubeClient, factory, cmCl, cmFactory := framework.NewClients(t, config)
 
 	namespace := "testns"
 
@@ -70,7 +70,6 @@ func TestTriggerController(t *testing.T) {
 	}
 	shouldReissue := policies.NewTriggerPolicyChain(fakeClock).Evaluate
 	controllerContext := &controllerpkg.Context{
-		Scheme:                    scheme,
 		Client:                    kubeClient,
 		KubeSharedInformerFactory: factory,
 		CMClient:                  cmCl,
@@ -78,7 +77,7 @@ func TestTriggerController(t *testing.T) {
 		ContextOptions: controllerpkg.ContextOptions{
 			Clock: fakeClock,
 		},
-		Recorder:     framework.NewEventRecorder(t, scheme),
+		Recorder:     framework.NewEventRecorder(t),
 		FieldManager: "cert-manager-certificates-trigger-test",
 	}
 	ctrl, queue, mustSync := trigger.NewController(logf.Log, controllerContext, shouldReissue)
@@ -123,7 +122,7 @@ func TestTriggerController_RenewNearExpiry(t *testing.T) {
 	// triggering depending on whether a renewal is required.
 	shoudReissue := policies.Chain{policies.CurrentCertificateNearingExpiry(fakeClock)}.Evaluate
 	// Build, instantiate and run the trigger controller.
-	kubeClient, factory, cmCl, cmFactory, scheme := framework.NewClients(t, config)
+	kubeClient, factory, cmCl, cmFactory := framework.NewClients(t, config)
 
 	namespace := "testns"
 	secretName := "example"
@@ -176,7 +175,6 @@ func TestTriggerController_RenewNearExpiry(t *testing.T) {
 	}
 
 	controllerContext := &controllerpkg.Context{
-		Scheme:                    scheme,
 		Client:                    kubeClient,
 		KubeSharedInformerFactory: factory,
 		CMClient:                  cmCl,
@@ -184,7 +182,7 @@ func TestTriggerController_RenewNearExpiry(t *testing.T) {
 		ContextOptions: controllerpkg.ContextOptions{
 			Clock: fakeClock,
 		},
-		Recorder:     framework.NewEventRecorder(t, scheme),
+		Recorder:     framework.NewEventRecorder(t),
 		FieldManager: "cert-manager-certificates-trigger-test",
 	}
 	// Start the trigger controller
@@ -245,7 +243,7 @@ func TestTriggerController_ExpBackoff(t *testing.T) {
 	// this test.
 	shoudReissue := policies.NewTriggerPolicyChain(fakeClock).Evaluate
 	// Build, instantiate and run the trigger controller.
-	kubeClient, factory, cmCl, cmFactory, scheme := framework.NewClients(t, config)
+	kubeClient, factory, cmCl, cmFactory := framework.NewClients(t, config)
 
 	namespace := "testns"
 	secretName := "example"
@@ -272,7 +270,6 @@ func TestTriggerController_ExpBackoff(t *testing.T) {
 	}
 
 	controllerContext := &controllerpkg.Context{
-		Scheme:                    scheme,
 		Client:                    kubeClient,
 		KubeSharedInformerFactory: factory,
 		CMClient:                  cmCl,
@@ -280,7 +277,7 @@ func TestTriggerController_ExpBackoff(t *testing.T) {
 		ContextOptions: controllerpkg.ContextOptions{
 			Clock: fakeClock,
 		},
-		Recorder:     framework.NewEventRecorder(t, scheme),
+		Recorder:     framework.NewEventRecorder(t),
 		FieldManager: "cert-manager-certificates-trigger-test",
 	}
 

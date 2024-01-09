@@ -49,7 +49,7 @@ func TestAcmeOrdersController(t *testing.T) {
 
 	// Create clients and informer factories for Kubernetes API and
 	// cert-manager.
-	kubeClient, factory, cmCl, cmFactory, scheme := framework.NewClients(t, config)
+	kubeClient, factory, cmCl, cmFactory := framework.NewClients(t, config)
 
 	// some test values
 	var (
@@ -120,7 +120,6 @@ func TestAcmeOrdersController(t *testing.T) {
 
 	controllerContext := controllerpkg.Context{
 		Client:                    kubeClient,
-		Scheme:                    scheme,
 		KubeSharedInformerFactory: factory,
 		CMClient:                  cmCl,
 		SharedInformerFactory:     cmFactory,
@@ -131,7 +130,7 @@ func TestAcmeOrdersController(t *testing.T) {
 			},
 		},
 
-		Recorder:     framework.NewEventRecorder(t, scheme),
+		Recorder:     framework.NewEventRecorder(t),
 		FieldManager: "cert-manager-orders-test",
 	}
 

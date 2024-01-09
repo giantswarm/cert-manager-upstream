@@ -73,9 +73,6 @@ spec:
           - --leader-election-retry-period={{ .retryPeriod }}
           {{- end }}
           {{- end }}
-          {{- with .Values.cainjector.featureGates}}
-          - --feature-gates={{ . }}
-          {{- end}}
           {{- with .Values.cainjector.extraArgs }}
           {{- toYaml . | nindent 10 }}
           {{- end }}

@@ -51,10 +51,9 @@ func TestRevisionManagerController(t *testing.T) {
 	defer stopFn()
 
 	// Build, instantiate and run the revision manager controller.
-	kubeClient, factory, cmCl, cmFactory, scheme := framework.NewClients(t, config)
+	kubeClient, factory, cmCl, cmFactory := framework.NewClients(t, config)
 
 	controllerContext := controllerpkg.Context{
-		Scheme:                scheme,
 		CMClient:              cmCl,
 		SharedInformerFactory: cmFactory,
 	}

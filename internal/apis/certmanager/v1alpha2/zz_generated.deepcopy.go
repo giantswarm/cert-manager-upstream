@@ -41,11 +41,6 @@ func (in *CAIssuer) DeepCopyInto(out *CAIssuer) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.IssuingCertificateURLs != nil {
-		in, out := &in.IssuingCertificateURLs, &out.IssuingCertificateURLs
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	return
 }
 

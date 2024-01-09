@@ -145,7 +145,7 @@ The following table lists the configurable parameters of the cert-manager chart 
 | `config` | ControllerConfiguration YAML used to configure flags for the controller. Generates a ConfigMap containing contents of the field. See `values.yaml` for example. | `{}` |
 | `enableServiceLinks` | Indicates whether information about services should be injected into pod's environment variables, matching the syntax of Docker links. | `false` |
 | `webhook.replicaCount` | Number of cert-manager webhook replicas | `1` |
-| `webhook.timeoutSeconds` | Seconds the API server should wait for the webhook to respond before treating the call as a failure. Value must be between 1 and 30 seconds. | `30` |
+| `webhook.timeoutSeconds` | Seconds the API server should wait the webhook to respond before treating the call as a failure. | `10` |
 | `webhook.podAnnotations` | Annotations to add to the webhook pods | `{}` |
 | `webhook.podLabels` | Labels to add to the cert-manager webhook pod | `{}` |
 | `webhook.serviceLabels` | Labels to add to the cert-manager webhook service | `{}` |
@@ -225,7 +225,7 @@ The following table lists the configurable parameters of the cert-manager chart 
 | `startupapicheck.backoffLimit` | Job backoffLimit | `4` |
 | `startupapicheck.jobAnnotations` | Optional additional annotations to add to the startupapicheck Job | `{}` |
 | `startupapicheck.podAnnotations` | Optional additional annotations to add to the startupapicheck Pods | `{}` |
-| `startupapicheck.extraArgs` | Optional additional arguments for startupapicheck | `["-v"]` |
+| `startupapicheck.extraArgs` | Optional additional arguments for startupapicheck | `[]` |
 | `startupapicheck.resources` | CPU/memory resource requests/limits for the startupapicheck pod | `{}` |
 | `startupapicheck.nodeSelector` | Node labels for startupapicheck pod assignment | `{}` |
 | `startupapicheck.affinity` | Node affinity for startupapicheck pod assignment | `{}` |

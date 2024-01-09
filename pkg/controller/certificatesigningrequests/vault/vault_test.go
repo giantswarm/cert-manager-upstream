@@ -70,7 +70,6 @@ func TestProcessItem(t *testing.T) {
 					},
 				},
 			},
-			Server: "https://example.vault.com",
 		}),
 		gen.AddIssuerCondition(cmapi.IssuerCondition{
 			Type:   cmapi.IssuerConditionReady,

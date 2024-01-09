@@ -226,7 +226,6 @@ func (s *Solver) buildDefaultPod(ch *cmacme.Challenge) *corev1.Pod {
 						},
 					},
 					SecurityContext: &corev1.SecurityContext{
-						ReadOnlyRootFilesystem:   ptr.To(true),
 						AllowPrivilegeEscalation: ptr.To(false),
 						Capabilities: &corev1.Capabilities{
 							Drop: []corev1.Capability{"ALL"},
