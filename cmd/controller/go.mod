@@ -6,7 +6,7 @@ go 1.20
 // please place any replace statements here at the top for visibility and add a
 // comment to it as to when it can be removed
 
-replace github.com/cert-manager/cert-manager => ../../
+replace github.com/cert-manager/cert-manager => /Users/spyros/Workspace/giantswarm/cert-manager-upstream
 
 require (
 	github.com/cert-manager/cert-manager v0.0.0-00010101000000-000000000000

@@ -30,12 +30,11 @@ import (
 	"net/http"
 	"time"
 
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/utils/clock"
-
-	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 )
 
 const (
@@ -62,6 +61,7 @@ type Metrics struct {
 	venafiClientRequestDurationSeconds *prometheus.SummaryVec
 	controllerSyncCallCount            *prometheus.CounterVec
 	controllerSyncErrorCount           *prometheus.CounterVec
+	certificateRequestCount            *prometheus.GaugeVec
 }
 
 var readyConditionStatuses = [...]cmmeta.ConditionStatus{cmmeta.ConditionTrue, cmmeta.ConditionFalse, cmmeta.ConditionUnknown}
@@ -184,13 +184,21 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 			},
 			[]string{"controller"},
 		)
+
+		certificateRequestCount = prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "current_certificate_request_count",
+				Help: "The current number of certificate requests.",
+			},
+			[]string{"name", "namespace", "issuer_name", "issuer_kind", "issuer_group"},
+		)
 	)
 
 	// Create server and register Prometheus metrics handler
 	m := &Metrics{
-		log:      log.WithName("metrics"),
-		registry: prometheus.NewRegistry(),
-
+		log:                                log.WithName("metrics"),
+		registry:                           prometheus.NewRegistry(),
+		certificateRequestCount:            certificateRequestCount,
 		clockTimeSeconds:                   clockTimeSeconds,
 		clockTimeSecondsGauge:              clockTimeSecondsGauge,
 		certificateExpiryTimeSeconds:       certificateExpiryTimeSeconds,
@@ -208,16 +216,44 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 
 // NewServer registers Prometheus metrics and returns a new Prometheus metrics HTTP server.
 func (m *Metrics) NewServer(ln net.Listener) *http.Server {
-	m.registry.MustRegister(m.clockTimeSeconds)
-	m.registry.MustRegister(m.clockTimeSecondsGauge)
-	m.registry.MustRegister(m.certificateExpiryTimeSeconds)
-	m.registry.MustRegister(m.certificateRenewalTimeSeconds)
-	m.registry.MustRegister(m.certificateReadyStatus)
-	m.registry.MustRegister(m.acmeClientRequestDurationSeconds)
-	m.registry.MustRegister(m.venafiClientRequestDurationSeconds)
-	m.registry.MustRegister(m.acmeClientRequestCount)
-	m.registry.MustRegister(m.controllerSyncCallCount)
-	m.registry.MustRegister(m.controllerSyncErrorCount)
+	metricsToRegister := []prometheus.Collector{
+		m.certificateRequestCount,
+		m.clockTimeSeconds,
+		m.clockTimeSecondsGauge,
+		m.certificateExpiryTimeSeconds,
+		m.certificateRenewalTimeSeconds,
+		m.certificateReadyStatus,
+		m.acmeClientRequestDurationSeconds,
+		m.venafiClientRequestDurationSeconds,
+		m.acmeClientRequestCount,
+		m.controllerSyncCallCount,
+		m.controllerSyncErrorCount,
+	}
+
+	for _, metric := range metricsToRegister {
+		// Check if the metric is already registered
+		alreadyRegistered := m.registry.Unregister(metric)
+		if !alreadyRegistered {
+			// If metric was not already registered, register it
+			err := m.registry.Register(metric)
+			if err != nil {
+				descChan := make(chan *prometheus.Desc, 1)
+				metric.Describe(descChan)
+				desc := <-descChan
+				m.log.Error(err, "Failed to register metric", "metric", desc.String())
+			} else {
+				descChan := make(chan *prometheus.Desc, 1)
+				metric.Describe(descChan)
+				desc := <-descChan
+				m.log.Info("Registered metric", "name", desc.String())
+			}
+		} else {
+			descChan := make(chan *prometheus.Desc, 1)
+			metric.Describe(descChan)
+			desc := <-descChan
+			m.log.Info("Metric already registered; skipping", "name", desc.String())
+		}
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}))
@@ -241,4 +277,14 @@ func (m *Metrics) IncrementSyncCallCount(controllerName string) {
 // IncrementSyncErrorCount will increase count of errors during sync of that controller.
 func (m *Metrics) IncrementSyncErrorCount(controllerName string) {
 	m.controllerSyncErrorCount.WithLabelValues(controllerName).Inc()
+}
+
+func (m *Metrics) IncrementCurrentCertificateRequest(name, namespace, issuerName, issuerKind, issuerGroup string) {
+	m.log.Info("Incrementing certificateRequestCount", "name", name, "namespace", namespace, "issuerName", issuerName, "issuerKind", issuerKind, "issuerGroup", issuerGroup)
+	m.certificateRequestCount.WithLabelValues(name, namespace, issuerName, issuerKind, issuerGroup).Inc()
+}
+
+func (m *Metrics) DecrementCurrentCertificateRequest(name, namespace, issuerName, issuerKind, issuerGroup string) {
+	m.log.Info("Decrementing certificateRequestCount", "name", name, "namespace", namespace, "issuerName", issuerName, "issuerKind", issuerKind, "issuerGroup", issuerGroup)
+	m.certificateRequestCount.WithLabelValues(name, namespace, issuerName, issuerKind, issuerGroup).Dec()
 }
